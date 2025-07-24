@@ -5,7 +5,7 @@ import json
 app = Flask(__name__)
 
 # Chargement de l’index JSON
-with open('index.json', 'r', encoding='utf-8') as f:
+with open("index_plu_4departements.json", "r", encoding="utf-8") as f:
     index_pdf = json.load(f)
 
 @app.route('/api/plu', methods=['GET'])
