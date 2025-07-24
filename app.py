@@ -1,48 +1,46 @@
-from flask import Flask, request, jsonify
-import requests
 import json
+import requests
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Chargement de l’index JSON
-with open("index_plu_4departements.json", "r", encoding="utf-8") as f:
-    index_pdf = json.load(f)
-
-@app.route('/api/plu', methods=['GET'])
+@app.route("/get-plu", methods=["POST"])
 def get_plu():
-    adresse = request.args.get('adresse')
-    if not adresse:
-        return jsonify({'error': 'Paramètre "adresse" requis'}), 400
+    data = request.get_json()
+    adresse = data.get("adresse")
 
-    # 🔍 Géocodage via OpenCage
-    opencage_api_key = 'b71bdf9bdf954e57bd4d915b79189721'
-    geo_url = f"https://api.opencagedata.com/geocode/v1/json?q={adresse}&key={opencage_api_key}"
-    geo_response = requests.get(geo_url)
+    if not adresse:
+        return jsonify({"error": "Adresse manquante"}), 400
+
+    # Requête vers l’API OpenCage pour géocoder l’adresse
+    url_geo = f"https://api.opencagedata.com/geocode/v1/json?q={adresse}&key=b71bdf9bdf5045e7bd4d915b79189721"
+    geo_response = requests.get(url_geo)
     geo_data = geo_response.json()
 
+    # 🎯 Étape 1 : Affiche les données brutes (debug)
+    print(json.dumps(geo_data, indent=2, ensure_ascii=False))
+
+    # 🎯 Étape 2 : Récupération sécurisée de la commune
     try:
-        components = geo_data['results'][0]['components']
+        components = geo_data["results"][0]["components"]
         commune = (
-    components.get('city') or
-    components.get('town') or
-    components.get('village') or
-    components.get('city_district')
-)
-        if not commune:
-            return jsonify({'error': 'Commune non trouvée'}), 404
+            components.get("city")
+            or components.get("town")
+            or components.get("village")
+            or components.get("municipality")
+        )
     except (KeyError, IndexError):
-        return jsonify({'error': 'Adresse introuvable'}), 404
+        return jsonify({"error": "Impossible de lire les données OpenCage"}), 500
 
-    # 🔗 Recherche du lien PDF
-    lien_pdf = index_pdf.get(commune)
-    if not lien_pdf:
-        return jsonify({
-            'commune': commune,
-            'pdf': None,
-            'message': f"Aucun PDF trouvé pour la commune : {commune}"
-        }), 404
+    if not commune:
+        return jsonify({"error": "Commune introuvable dans les données OpenCage"}), 404
 
-    return jsonify({
+    # 🎯 Étape 3 : Normalise le nom de commune
+    commune = commune.strip().title()
+
+    # 🎯 Lecture du fichier index
+    with open("index_plu_4departements.json", "r", encoding="utf-8") as f:
+
         'commune': commune,
         'pdf': lien_pdf,
         'message': f"PDF trouvé pour la commune : {commune}"
