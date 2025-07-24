@@ -44,10 +44,10 @@ with open("index_plu_4departements.json", "r", encoding="utf-8") as f:
 
 pdf_url = index_data.get(commune, {}).get("pdf")
 
-if not pdf_url:
-    return jsonify({"error": "PLU non trouvé pour cette commune"}), 404
+    if not pdf_url:
+        return jsonify({"error": "PLU non trouvé pour cette commune"}), 404
 
-return jsonify({"commune": commune, "pdf_url": pdf_url})
+    return jsonify({"commune": commune, "pdf_url": pdf_url})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
