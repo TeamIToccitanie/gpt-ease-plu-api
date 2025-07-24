@@ -22,7 +22,12 @@ def get_plu():
 
     try:
         components = geo_data['results'][0]['components']
-        commune = components.get('city') or components.get('town') or components.get('village')
+        commune = (
+    components.get('city') or
+    components.get('town') or
+    components.get('village') or
+    components.get('city_district')
+)
         if not commune:
             return jsonify({'error': 'Commune non trouvée'}), 404
     except (KeyError, IndexError):
