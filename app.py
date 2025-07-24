@@ -38,13 +38,16 @@ def get_plu():
     # 🎯 Étape 3 : Normalise le nom de commune
     commune = commune.strip().title()
 
-    # 🎯 Lecture du fichier index
-    with open("index_plu_4departements.json", "r", encoding="utf-8") as f:
+    # Lecture du fichier index
+with open("index_plu_4departements.json", "r", encoding="utf-8") as f:
+    index_data = json.load(f)
 
-        'commune': commune,
-        'pdf': lien_pdf,
-        'message': f"PDF trouvé pour la commune : {commune}"
-    })
+pdf_url = index_data.get(commune, {}).get("pdf")
+
+if not pdf_url:
+    return jsonify({"error": "PLU non trouvé pour cette commune"}), 404
+
+return jsonify({"commune": commune, "pdf_url": pdf_url})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
